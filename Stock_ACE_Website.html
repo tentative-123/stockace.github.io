@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Ace - 互動策略版</title>
+    
+    <!-- 引入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- 引入 Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+    
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              'sans': ['Inter', 'Noto Sans TC', 'sans-serif'],
+            },
+            colors: {
+              'brand-fire': {
+                'DEFAULT': '#F97316', // 主火焰橘色
+                'light': '#FB923C',
+                'dark': '#EA580C',
+              },
+              'brand-ember': { // 餘燼黃色
+                'DEFAULT': '#FBBF24',
+                'light': '#FCD34D',
+              },
+              'brand-dark': '#111827', // 深炭黑色
+            },
+            animation: {
+              'fade-in': 'fadeIn 0.3s ease-out',
+            },
+            keyframes: {
+              fadeIn: {
+                '0%': { opacity: '0', transform: 'scale(0.95)' },
+                '100%': { opacity: '1', transform: 'scale(1)' },
+              }
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+        /* 自定義樣式 */
+        body {
+            font-family: 'Inter', 'Noto Sans TC', sans-serif;
+            background-color: #000000;
+            background-image: 
+                radial-gradient(ellipse at 30% 20%, rgba(249, 115, 22, 0.3), transparent 70%),
+                radial-gradient(ellipse at 80% 90%, rgba(251, 191, 36, 0.2), transparent 70%);
+            background-attachment: fixed;
+        }
+        .link-card {
+            background-color: rgba(17, 24, 39, 0.7);
+            border: 1px solid rgba(249, 115, 22, 0.3);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .link-card:hover {
+            transform: translateY(-5px);
+            background-color: rgba(249, 115, 22, 0.1);
+            border-color: rgba(251, 191, 36, 0.7);
+            box-shadow: 0 10px 30px -10px rgba(249, 115, 22, 0.4);
+        }
+        .fire-text {
+            color: #FB923C;
+            text-shadow: 0 0 5px #F97316, 0 0 10px #EA580C;
+        }
+        .strategy-tag {
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+        }
+        .strategy-tag:hover, .strategy-tag.selected {
+            transform: scale(1.1);
+            background-color: #F97316 !important;
+            color: #111827 !important;
+            font-weight: bold;
+            box-shadow: 0 0 15px rgba(249, 115, 22, 0.6);
+        }
+    </style>
+</head>
+<body class="text-gray-100 min-h-screen flex items-center justify-center p-4">
+
+    <div class="w-full max-w-md mx-auto">
+        
+        <!-- 個人頭像與標題 -->
+        <header class="text-center mb-8">
+            <div class="flex justify-center items-center mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-brand-fire drop-shadow-[0_0_10px_#F97316]">
+                    <path d="M12 19c-1.5 0-3-3.03-3-4.5s1.5-4.5 3-4.5 3 3.03 3 4.5S13.5 19 12 19z"/><path d="M10.5 14.5c-1.5 0-3-2.03-3-3.5s1.5-3.5 3-3.5 3 2.03 3 3.5S12 14.5 10.5 14.5z"/><path d="M14.5 13.5c1 0 2-2 2-3s-1-3-2-3-2 2-2 3 1 3 2 3z"/><path d="M14 8.5c0-1 1-2 2-2s2 1 2 2-1 2-2 2-2-1-2-2z"/><path d="M7 14a2 2 0 0 0-2-2c-1 0-2 1-2 2s1 2 2 2 2-1 2-2z"/>
+                </svg>
+            </div>
+            <h1 class="text-4xl md:text-5xl font-black text-white tracking-wider uppercase" style="text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+                Stock Ace
+            </h1>
+            <p class="fire-text mt-2 text-base md:text-lg font-bold">
+                燃燒我的籌碼，突破你的想像
+            </p>
+        </header>
+        
+        <!-- 王牌策略互動區 -->
+        <section class="mb-8">
+            <div class="text-center p-4 bg-black/20 rounded-t-xl border-x border-t border-dashed border-brand-fire/30">
+                <h2 class="font-bold text-brand-ember tracking-widest mb-3">—— 點擊解鎖王牌策略 ——</h2>
+                <div id="strategy-container" class="flex flex-wrap justify-center gap-x-3 gap-y-2 text-sm text-gray-300">
+                    <span class="bg-brand-dark px-3 py-1 rounded-md strategy-tag" data-strategy="三角收斂">#三角收斂</span>
+                    <span class="bg-brand-dark px-3 py-1 rounded-md strategy-tag" data-strategy="高檔飛舞">#高檔飛舞</span>
+                    <span class="bg-brand-dark px-3 py-1 rounded-md strategy-tag" data-strategy="投信突買">#投信突買</span>
+                    <span class="bg-brand-dark px-3 py-1 rounded-md strategy-tag" data-strategy="神秘籌碼">#神秘籌碼</span>
+                </div>
+            </div>
+             <!-- 策略說明顯示區 -->
+             <div id="strategy-description-container" class="p-5 bg-black/40 border-x border-b border-brand-fire/30 rounded-b-xl min-h-[150px] text-gray-300 transition-all duration-300">
+                <!-- JavaScript 會在這裡填入內容 -->
+             </div>
+        </section>
+
+        <!-- 主要連結 -->
+        <main class="space-y-4">
+            <!-- 火線速報按鈕 -->
+            <div id="open-socials-modal" class="group flex items-center w-full p-4 rounded-xl link-card cursor-pointer">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-brand-fire/80 group-hover:text-brand-fire mr-4"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/><path d="M22 12c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2s10 4.477 10 10z"/><path d="M12 16a4 4 0 0 0 0-8"/></svg>
+                <span class="font-semibold text-white">火線速報</span>
+                <span class="ml-auto text-brand-fire/70 group-hover:text-brand-ember transition-transform duration-300 group-hover:translate-x-1 font-bold">&rarr;</span>
+            </div>
+            <!-- 策略解密介紹按鈕 -->
+            <div id="open-strategy-modal" class="group flex items-center w-full p-4 rounded-xl link-card cursor-pointer">
+                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-brand-fire/80 group-hover:text-brand-fire mr-4"><path d="m12 2 4.4 4.4L12 10.8 7.6 6.4 12 2Z"/><path d="m2 12l4.4 4.4L10.8 12 6.4 7.6 2 12Z"/><path d="m12 22 4.4-4.4L12 13.2 7.6 17.6 12 22Z"/></svg>
+                <span class="font-semibold text-white">火拳策略深度解密</span>
+                <span class="ml-auto text-brand-fire/70 group-hover:text-brand-ember transition-transform duration-300 group-hover:translate-x-1 font-bold">&rarr;</span>
+            </div>
+            <!-- DC 介紹按鈕 -->
+            <div id="open-dc-modal" class="group flex items-center w-full p-4 rounded-xl link-card cursor-pointer">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-brand-fire/80 group-hover:text-brand-fire mr-4"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                <span class="font-semibold text-white">DC 台股討論區介紹</span>
+                <span class="ml-auto text-brand-fire/70 group-hover:text-brand-ember transition-transform duration-300 group-hover:translate-x-1 font-bold">&rarr;</span>
+            </div>
+        </main>
+        
+        <footer class="text-center mt-10">
+            <p class="text-xs text-gray-500 mt-4">
+                &copy; <span id="year"></span>
+                Stock Ace. All Rights Reserved.
+            </p>
+        </footer>
+    </div>
+
+    <!-- 火線速報 Modal -->
+    <div id="socials-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 items-center justify-center p-4">
+        <div class="w-full max-w-md mx-auto bg-brand-dark rounded-2xl border-2 border-brand-fire/50 shadow-2xl shadow-brand-fire/20 p-6 relative animate-fade-in">
+            <!-- 關閉按鈕 -->
+            <button id="close-socials-modal" class="absolute -top-3 -right-3 w-8 h-8 bg-brand-fire text-brand-dark rounded-full flex items-center justify-center text-2xl font-black hover:bg-brand-ember transition-colors">
+                &times;
+            </button>
+            <!-- Modal 內容 -->
+            <h2 class="text-2xl font-bold text-brand-ember text-center mb-6">火線速報</h2>
+            <div class="space-y-4">
+                 <a href="#" target="_blank" class="block w-full text-center bg-gray-700/80 hover:bg-gray-600 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300">
+                    YT影音區
+                </a>
+                <a href="#" target="_blank" class="block w-full text-center bg-gray-700/80 hover:bg-gray-600 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300">
+                    抖音少看區
+                </a>
+                <a href="https://www.threads.com/@stock_ace" target="_blank" class="block w-full text-center bg-gray-700/80 hover:bg-gray-600 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300">
+                    Theads講講話區
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 策略解密介紹 Modal -->
+    <div id="strategy-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 items-center justify-center p-4">
+        <div class="w-full max-w-md mx-auto bg-brand-dark rounded-2xl border-2 border-brand-fire/50 shadow-2xl shadow-brand-fire/20 p-6 relative animate-fade-in">
+            <!-- 關閉按鈕 -->
+            <button id="close-strategy-modal" class="absolute -top-3 -right-3 w-8 h-8 bg-brand-fire text-brand-dark rounded-full flex items-center justify-center text-2xl font-black hover:bg-brand-ember transition-colors">
+                &times;
+            </button>
+            <!-- Modal 內容 -->
+            <h2 class="text-2xl font-bold text-brand-ember text-center mb-4">火拳策略解密</h2>
+            <p class="text-gray-300 leading-relaxed">
+                艾斯目前有一個收費程式推播群組與免費群，每天盤後進行型態籌碼選股，每周固定精選個股，這不是跟單群，而是一個能讓你更加便利的群組，你每天只要操作同一種型態，不用一個月，你也會是個專家，這就是程式選股的好處，歡迎入群交流討論。
+            </p>
+             <a href="https://line.me/ti/g2/J55euA0hTHPnwRWHIC2ZA3WAoTTS3A-_4ojMMA?utm_source=invitation&utm_medium=link_copy&utm_campaign=default" target="_blank" class="block w-full text-center mt-6 bg-brand-fire hover:bg-brand-fire-dark text-brand-dark font-bold py-3 px-4 rounded-lg shadow-lg shadow-brand-fire/20 hover:shadow-brand-fire/40 transition-all duration-300">
+                加入免費群
+            </a>
+        </div>
+    </div>
+
+    <!-- DC 功能介紹 Modal -->
+    <div id="dc-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 items-center justify-center p-4">
+        <div class="w-full max-w-md mx-auto bg-brand-dark rounded-2xl border-2 border-brand-fire/50 shadow-2xl shadow-brand-fire/20 p-6 relative animate-fade-in">
+            <!-- 關閉按鈕 -->
+            <button id="close-dc-modal" class="absolute -top-3 -right-3 w-8 h-8 bg-brand-fire text-brand-dark rounded-full flex items-center justify-center text-2xl font-black hover:bg-brand-ember transition-colors">
+                &times;
+            </button>
+            <!-- Modal 內容 -->
+            <h2 class="text-2xl font-bold text-brand-ember text-center mb-6">DC 討論區獨家功能</h2>
+            <ul class="space-y-4 text-gray-200">
+                <li class="flex items-start"><span class="text-brand-fire mr-3 mt-1">&#10004;</span>每日強勢股選股</li>
+                <li class="flex items-start"><span class="text-brand-fire mr-3 mt-1">&#10004;</span>每週 AI 機器人大盤分析</li>
+                <li class="flex items-start"><span class="text-brand-fire mr-3 mt-1">&#10004;</span>日 K 線圖技術分析報告</li>
+                <li class="flex items-start"><span class="text-brand-fire mr-3 mt-1">&#10004;</span>短線 5 分 K 價量支撐報告</li>
+                <li class="flex items-start"><span class="text-brand-fire mr-3 mt-1">&#10004;</span>融資券判讀機器人</li>
+                <li class="flex items-start"><span class="text-brand-fire mr-3 mt-1">&#10004;</span>AI 艾斯分身個股解盤</li>
+            </ul>
+             <a href="#" target="_blank" class="block w-full text-center mt-8 bg-brand-fire hover:bg-brand-fire-dark text-brand-dark font-bold py-3 px-4 rounded-lg shadow-lg shadow-brand-fire/20 hover:shadow-brand-fire/40 transition-all duration-300">
+                點我立即加入
+            </a>
+        </div>
+    </div>
+
+
+    <script>
+        // 自動更新年份
+        document.getElementById('year').textContent = new Date().getFullYear();
+
+        // 策略說明互動功能
+        const strategyContainer = document.getElementById('strategy-container');
+        const descriptionContainer = document.getElementById('strategy-description-container');
+        const strategyDescriptions = {
+            "三角收斂": "針對一種上下盤整收斂的型態，通常到收斂的尾端會判隨著方向表態，是個能多能空的策略，也是艾斯最喜歡操作的策略，也有許多能操作三角收斂的方法，歡迎多多交流學習。",
+            "高檔飛舞": "是抓取創近期新高後出現換手型態，主力會在一檔股票起漲過程進行大量換手，輕易追高就會被洗的滿身傷，而這個型態就是趁著換手結束後找機會去抓切入繼續進入下一波拉抬的策略，屬於短波段打法。",
+            "投信突買": "顧名思義是抓取投信突然大買的第一天，不過艾斯有優化成投信是具備動能買盤進場，也就是說該股正被投信有意做拉抬，是個能波段也能短打的策略。",
+            "神秘籌碼": "程式會抓取波動不大或者正在打底階段的個股，並有神秘分點偷偷進場，透過提前布局的方式，讓後續起漲後，你能跟大戶在同一個水平，而不是漲高追進來的散戶，是屬於中長波段策略。"
+        };
+        descriptionContainer.innerHTML = `<p class="text-center text-gray-400">點擊上方的任一策略，查看詳細說明！</p>`;
+        strategyContainer.addEventListener('click', (e) => {
+            if (e.target.classList.contains('strategy-tag')) {
+                const allTags = strategyContainer.querySelectorAll('.strategy-tag');
+                const selectedStrategy = e.target.dataset.strategy;
+                if (e.target.classList.contains('selected')) {
+                    e.target.classList.remove('selected');
+                    descriptionContainer.innerHTML = `<p class="text-center text-gray-400">點擊上方的任一策略，查看詳細說明！</p>`;
+                } else {
+                    allTags.forEach(tag => tag.classList.remove('selected'));
+                    e.target.classList.add('selected');
+                    descriptionContainer.style.opacity = 0;
+                    setTimeout(() => {
+                        descriptionContainer.innerHTML = `<p>${strategyDescriptions[selectedStrategy]}</p>`;
+                        descriptionContainer.style.opacity = 1;
+                    }, 150);
+                }
+            }
+        });
+
+        // 通用 Modal 開關函數
+        const setupModal = (openBtnId, closeBtnId, modalId) => {
+            const openButton = document.getElementById(openBtnId);
+            const closeButton = document.getElementById(closeBtnId);
+            const modal = document.getElementById(modalId);
+
+            if (!openButton || !closeButton || !modal) return; // 如果元素不存在就直接返回
+
+            const openModal = () => {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            };
+
+            const closeModal = () => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            };
+
+            openButton.addEventListener('click', openModal);
+            closeButton.addEventListener('click', closeModal);
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    closeModal();
+                }
+            });
+        };
+
+        // 設置三個 Modal
+        setupModal('open-socials-modal', 'close-socials-modal', 'socials-modal');
+        setupModal('open-strategy-modal', 'close-strategy-modal', 'strategy-modal');
+        setupModal('open-dc-modal', 'close-dc-modal', 'dc-modal');
+
+    </script>
+
+</body>
+</html>
+w
